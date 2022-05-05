@@ -1,0 +1,87 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <RF24_config.h>
+
+#define joyX A0
+#define joyY A1
+
+RF24 radio(9, 10); // CE, CSN
+const byte address[6] = "00002";     //Byte of array representing the address. This is the address where we will send the data. This should be same on the receiving side.
+int button_pin = 2;
+boolean button_state = 0;
+int xValue;
+int yValue;
+int sendValue;
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(button_pin, INPUT);
+  radio.begin();                  //Starting the Wireless communication
+  radio.openWritingPipe(address); //Setting the address where we will send the data
+  radio.setPALevel(RF24_PA_MIN);  //You can set it as minimum or maximum depending on the distance between the transmitter and receiver.
+  radio.stopListening();          //This sets the module as transmitter
+
+  Serial.begin(9600);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  xValue = map(analogRead(joyX), 0, 1023, 255, -255);
+  yValue = map(analogRead(joyY), 0, 1023, -255, 255);
+
+  //    Serial.println("X value:");
+  //  Serial.println(xValue);
+  //  Serial.println("Y value:");
+  //  Serial.println(yValue);
+
+  if (yValue > 20) {
+    if (xValue > 50) {
+      sendValue = 3;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else if ( xValue < -50) {
+      sendValue = 1;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else {
+      sendValue = 2; Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    }
+  } if (yValue < -20 ) {
+    if (xValue > 50) {
+      sendValue = 12;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else if (xValue < -50) {
+      sendValue = 10;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else {
+      sendValue = 11;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    }
+  } if (yValue >= -20 && yValue <= 20) {
+    if (xValue > 50) {
+      sendValue = 6;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else if (xValue < -50) {
+      sendValue = 4;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    } else {
+      sendValue = 0;
+      Serial.println("sendValue: ");
+      Serial.println(sendValue);
+    }
+  }
+
+
+  radio.write(&sendValue, sizeof(sendValue));
+
+  delay(10);
+
+}
